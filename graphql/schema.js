@@ -1,4 +1,4 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools'
+import { makeExecutableSchema, addMockFunctionsToSchema, MockList } from 'graphql-tools'
 import 'isomorphic-fetch'
 import casual from 'casual'
 
@@ -6,6 +6,7 @@ import { format as formatDate } from 'date-fns'
 
 import fetchAPI from '../utils/fetchAPI'
 
+/*
 const typeDefs = `
   type Query {
     posts(first: Int = 20): [PostType]
@@ -24,8 +25,34 @@ const typeDefs = `
     avatar: String
   }
 `
+*/
 
 
+const typeDefs = `
+  type Query {
+    menus: [MenuType]
+  }
+
+  type MenuType {
+    id: Int
+    categoryId: Int
+    name: String
+    images: String
+    price: Int
+    rating:RatingType
+  }
+
+  type RatingType {
+    one: Int
+    two: Int
+    three: Int
+    four: Int
+    five: Int
+  }
+
+`
+
+/*
 
 const mocks = {
   PostType: () => ({
@@ -38,6 +65,31 @@ const mocks = {
     },
     pubDate: casual.date()
   })
+}
+*/
+
+
+
+const mocks = {
+  Query: () => ({
+    menus: (_, { limit = 10 }) => new MockList(limit)
+  }),
+  MenuType: () => ({
+    id: casual.integer(0, 100000),
+    categoryId: casual.integer(0, 100000),
+    name: casual.title,
+    images: `${casual.url}profile.jpg`,
+    price: casual.price,
+    rating: {
+      one: casual.integer(1, 100),
+      two: casual.integer(1, 100),
+      three: casual.integer(1, 100),
+      four: casual.integer(1, 100),
+      five: casual.integer(1, 100),
+    }
+  })
+
+
 }
 
 
