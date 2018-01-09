@@ -1,5 +1,6 @@
-import { makeExecutableSchema } from 'graphql-tools'
+import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools'
 import 'isomorphic-fetch'
+import casual from 'casual'
 
 import { format as formatDate } from 'date-fns'
 
@@ -24,29 +25,31 @@ const typeDefs = `
   }
 `
 
-const resolvers = {
-  Query: {
-    posts: async (_, { first }) => {
-      const { data } = await fetchAPI(`/posts?_limit=${first}`)
-      return data
+
+
+const mocks = {
+  PostType: () => ({
+    id: casual.integer(0, 100000),
+    title: casual.title,
+    body: casual.words(100),
+    author: {
+      name: casual.first_name,
+      avatar: `${casual.url}profile.jpg`
     },
-    post: async (_, { id }) => {
-      const { data } = await fetchAPI(`/posts/${id}`)
-      return data
-    }
-  },
-  PostType: {
-    pubDate: (_, { format }) => {
-      return formatDate(_.pubDate, format)
-    },
-    relatePosts: async (_, { first }) => {
-      const { data } = await fetchAPI(`/posts?_limit=${first}`)
-      return data
-    }
-  }
+    pubDate: casual.date()
+  })
 }
+
+
+const resolvers = {
+
+}
+
 
 export const schema = makeExecutableSchema({
   typeDefs,
   resolvers
 })
+
+addMockFunctionsToSchema({ schema, mocks })
+
