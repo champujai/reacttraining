@@ -1,35 +1,22 @@
 import { makeExecutableSchema, addMockFunctionsToSchema, MockList } from 'graphql-tools'
 import 'isomorphic-fetch'
 import casual from 'casual'
-
 import { format as formatDate } from 'date-fns'
-
 import fetchAPI from '../utils/fetchAPI'
 
-/*
 const typeDefs = `
+
   type Query {
-    posts(first: Int = 20): [PostType]
-    post(id: Int!): PostType
+    category(id: Int!):CategoryType
+    categories: [CategoryType]
+    menus : [MenuType]
+    menu(id: Int!): MenuType
   }
-  type PostType {
+  
+  type CategoryType{
     id: Int
-    title: String
-    body: String
-    author: AuthorType
-    pubDate(format: String = "DD-MM-YYYY"): String
-    relatePosts(first: Int = 5): [PostType]
-  }
-  type AuthorType {
     name: String
-    avatar: String
-  }
-`
-*/
-
-
-const typeDefs = `
-  type Query {
+    images: String
     menus: [MenuType]
   }
 
@@ -40,6 +27,8 @@ const typeDefs = `
     images: String
     price: Int
     rating:RatingType
+    comments:[CommentType]
+    category: CategoryType
   }
 
   type RatingType {
@@ -49,31 +38,19 @@ const typeDefs = `
     four: Int
     five: Int
   }
-
+  
+  type CommentType{
+    id: Int
+    body: String
+    menuId: Int
+  }
 `
-
-/*
-
-const mocks = {
-  PostType: () => ({
-    id: casual.integer(0, 100000),
-    title: casual.title,
-    body: casual.words(100),
-    author: {
-      name: casual.first_name,
-      avatar: `${casual.url}profile.jpg`
-    },
-    pubDate: casual.date()
-  })
-}
-*/
-
-
 
 const mocks = {
   Query: () => ({
     menus: (_, { limit = 10 }) => new MockList(limit)
   }),
+
   MenuType: () => ({
     id: casual.integer(0, 100000),
     categoryId: casual.integer(0, 100000),
@@ -93,9 +70,32 @@ const mocks = {
 }
 
 
-const resolvers = {
+/*
+http://localhost:4000/categories/
+http://localhost:4000/categories/2?_embed=menus
+http://localhost:4000/menus/1?_expand=category&_embed=comments
 
+*/
+
+
+const resolvers = {
+  Query: {
+    menu: (_, args, context, info) => {
+      return fetchAPI(`/menus/${args.id}?_expand=category&_embed=comments`).then(({ data }) => data)
+    },
+    menus: (_, args, context, info) => {
+      return fetchAPI(`/menus/`).then(({ data }) => data)
+    },
+    category: (_, args, context, info) => {
+      return fetchAPI(`/categories/${args.id}?_embed=menus`).then(({ data }) => data)
+    },
+    categories: (_, args, context, info) => {
+      return fetchAPI(`/categories/`).then(({ data }) => data)
+    }
+  }
 }
+
+
 
 
 export const schema = makeExecutableSchema({
@@ -103,5 +103,5 @@ export const schema = makeExecutableSchema({
   resolvers
 })
 
-addMockFunctionsToSchema({ schema, mocks })
+//addMockFunctionsToSchema({ schema, mocks })
 

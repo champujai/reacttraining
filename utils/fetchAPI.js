@@ -4,8 +4,12 @@ const api = 'http://localhost:4000'
 
 export default function fetchAPI(url, name = 'data') {
   return fetch(`${api}${url}`)
-    .then(res => res.json())
-    .then(json => {
+    .then(function (res) {
+      // console.log(res)
+      return res.json()
+    })
+    .then(function (json) {
+      //  console.log(json)
       return {
         [name]: json
       }
